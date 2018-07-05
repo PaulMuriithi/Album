@@ -31,6 +31,7 @@ import com.android.volley.toolbox.StringRequest
 import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import io.realm.Realm
 import kotlinx.android.synthetic.main.toolbar.*
 import java.io.IOException
 
@@ -43,12 +44,16 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
     private val dialogImage by lazy { imageDialog.findViewById<ImageView>(R.id.dialog_image_view) }
     private val noDataTextView by lazy { findViewById<TextView>(R.id.photos_no_data_textView) }
     private val progressBar by lazy { findViewById<ProgressBar>(R.id.photos_progressBar) }
+    private lateinit var realm: Realm
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_photos)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Open the realm for the UI thread.
+        realm = Realm.getDefaultInstance()
 
         val albumId = intent.getLongExtra(AlbumId, 0)
         val url = PhotoUrl.replace("{albumId}", "$albumId")
@@ -65,9 +70,20 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
             sendRequest(url)
             noDataTextView.visibility = View.GONE
         } else {
-            noDataTextView.visibility = View.VISIBLE
-            noDataTextView.text = getString(R.string.no_connection)
-            progressBar.visibility = View.GONE
+            //check if there are some saved photos
+            val photos = realm.where(Photo::class.java).findAll()
+            if (photos.isEmpty()) {
+                noDataTextView.visibility = View.VISIBLE
+                noDataTextView.text = getString(R.string.no_connection)
+                progressBar.visibility = View.GONE
+            } else {
+                noDataTextView.visibility = View.GONE
+                progressBar.visibility = View.GONE
+                recyclerView.visibility = View.VISIBLE
+
+                recyclerView.adapter = PhotoAdapter(this, photos, this)
+                recyclerView.adapter.notifyDataSetChanged()
+            }
         }
     }
 
@@ -77,18 +93,39 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
         VolleyService.build(this).requestQueue.start()
     }
 
-    private fun castByGSon(response: String) {
+    private fun handleResponse(response: String) {
         val photoResponse = object : TypeToken<List<Photo>>() {}.type
         val photoList = Gson().fromJson<List<Photo>>(response, photoResponse)
 
         recyclerView.adapter = PhotoAdapter(this, photoList, this)
         recyclerView.adapter.notifyDataSetChanged()
+
+        //save the photos
+        realm.executeTransaction { realm ->
+            photoList.forEach {
+                val existingPhoto = realm.where(Photo::class.java).equalTo("id", it.id).findFirst()
+                if (existingPhoto != null) {
+                    //update the existing photo
+                    existingPhoto.albumId = it.albumId
+                    existingPhoto.title = it.title
+                    existingPhoto.url = it.url
+                    existingPhoto.thumbnailUrl = it.thumbnailUrl
+                } else {
+                    //create a new one
+                    val photo = realm.createObject(Photo::class.java, it.id)
+                    photo.albumId = it.albumId
+                    photo.title = it.title
+                    photo.url = it.url
+                    photo.thumbnailUrl = it.thumbnailUrl
+                }
+            }
+        }
     }
 
 
     override fun onResponse(response: String) {
         try {
-            castByGSon(response)
+            handleResponse(response)
             progressBar.visibility = View.GONE
         } catch (e: IOException) {
             Log.e(TAG, e.localizedMessage)
@@ -100,7 +137,6 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
     }
 
     override fun onPhotoItemClickListener(url: String) {
-
         val layoutInflater = LayoutInflater.from(this)
         val alertView = layoutInflater.inflate(R.layout.dialog, null, false)
         imageDialog.setView(alertView)
@@ -120,5 +156,10 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
         super.onBackPressed()
         startActivity(Intent(this, AlbumsActivity::class.java))
         finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        realm.close()
     }
 }

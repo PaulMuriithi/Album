@@ -35,7 +35,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
+                android:gravity="center"
+                android:text="@string/no_connection_swipe"
                 android:textAppearance="?android:textAppearanceMedium"
+                android:textColor="@color/dark_grey"
                 android:visibility="gone" />
 
             <ProgressBar

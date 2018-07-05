@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Album</string>
     <string name="photo_title">photo title</string>
-    <string name="no_connection">No internet connection</string>
+    <string name="no_connection_swipe">Kindly turn on your internet and pull down to refresh</string>
+    <string name="no_connection_photos">Kindly turn on your internet</string>
     <string name="albums_activity_label">Albums</string>
     <string name="photos_activity_label">Photos</string>
 </resources>

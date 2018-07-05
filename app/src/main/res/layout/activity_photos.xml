@@ -27,7 +27,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:gravity="center"
+            android:paddingEnd="8dp"
+            android:text="@string/no_connection_photos"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingStart="8dp"
             android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="@color/dark_grey"
             android:visibility="gone" />
 
         <ProgressBar

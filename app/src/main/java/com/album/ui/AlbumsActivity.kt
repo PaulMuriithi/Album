@@ -61,17 +61,15 @@ class AlbumsActivity : AppCompatActivity(), Response.Listener<String>, Response.
             sendRequest(AlbumUrl)
             noDataTextView.visibility = View.GONE
         } else {
+            progressBar.visibility = View.GONE
+
             //check if there are some saved albums
             val albums = realm.where(Album::class.java).findAll()
             if (albums.isEmpty()) {
                 noDataTextView.visibility = View.VISIBLE
-                noDataTextView.text = getString(R.string.no_connection)
-
                 recyclerView.visibility = View.GONE
-                progressBar.visibility = View.GONE
             } else {
                 noDataTextView.visibility = View.GONE
-                progressBar.visibility = View.GONE
                 recyclerView.visibility = View.VISIBLE
 
                 recyclerView.adapter = AlbumAdapter(albums, this)

@@ -70,15 +70,14 @@ class PhotosActivity : AppCompatActivity(), Response.Listener<String>, Response.
             sendRequest(url)
             noDataTextView.visibility = View.GONE
         } else {
+            progressBar.visibility = View.GONE
+
             //check if there are some saved photos
             val photos = realm.where(Photo::class.java).findAll()
             if (photos.isEmpty()) {
                 noDataTextView.visibility = View.VISIBLE
-                noDataTextView.text = getString(R.string.no_connection)
-                progressBar.visibility = View.GONE
             } else {
                 noDataTextView.visibility = View.GONE
-                progressBar.visibility = View.GONE
                 recyclerView.visibility = View.VISIBLE
 
                 recyclerView.adapter = PhotoAdapter(this, photos, this)

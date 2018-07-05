@@ -7,5 +7,6 @@
     <color name="textColorPrimary">#FFFFFF</color>
     <color name="textColorSecondary">#FFFFFF</color>
     <color name="dark_grey">#61665d</color>
+    <color name="material_grey">#eeeeee</color>
 
 </resources>
